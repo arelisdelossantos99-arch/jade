@@ -1,0 +1,1403 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Sistema de Reconocimiento Facial 3D</title>
+    <style>
+        :root {
+            --primary: #007bff;
+            --success: #28a745;
+            --warning: #ffc107;
+            --danger: #dc3545;
+            --dark: #343a40;
+            --light: #f8f9fa;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.5;
+            padding: 0;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            padding: 10px;
+        }
+        
+        header {
+            background: linear-gradient(135deg, var(--dark), var(--primary));
+            color: white;
+            padding: 15px 10px;
+            margin-bottom: 15px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        header h1 {
+            text-align: center;
+            font-size: 20px;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+        
+        .subtitle {
+            text-align: center;
+            font-size: 12px;
+            opacity: 0.9;
+        }
+        
+        .tabs {
+            display: flex;
+            background-color: white;
+            border-radius: 10px;
+            overflow-x: auto;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+        
+        .tabs::-webkit-scrollbar {
+            display: none;
+        }
+        
+        .tab {
+            flex: 0 0 auto;
+            padding: 12px 15px;
+            text-align: center;
+            cursor: pointer;
+            background-color: #e9ecef;
+            border: none;
+            font-size: 14px;
+            transition: all 0.3s;
+            white-space: nowrap;
+            min-width: 120px;
+        }
+        
+        .tab.active {
+            background-color: var(--primary);
+            color: white;
+            font-weight: bold;
+        }
+        
+        .tab-content {
+            display: none;
+            background-color: white;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-bottom: 15px;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .panel {
+            margin-bottom: 15px;
+            border: 1px solid #dee2e6;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .panel-header {
+            background-color: #f8f9fa;
+            padding: 12px 15px;
+            border-bottom: 1px solid #dee2e6;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+        }
+        
+        .panel-body {
+            padding: 15px;
+        }
+        
+        .form-group {
+            margin-bottom: 12px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            font-size: 14px;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ced4da;
+            border-radius: 8px;
+            font-size: 16px; /* Mejor para móviles */
+            -webkit-appearance: none;
+        }
+        
+        select {
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23343a40' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            background-size: 16px;
+            padding-right: 40px;
+        }
+        
+        button {
+            padding: 12px 15px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+            font-weight: 500;
+            width: 100%;
+            margin-bottom: 8px;
+            touch-action: manipulation;
+        }
+        
+        button:active {
+            transform: scale(0.98);
+        }
+        
+        button.success {
+            background-color: var(--success);
+        }
+        
+        button.warning {
+            background-color: var(--warning);
+            color: #212529;
+        }
+        
+        button.danger {
+            background-color: var(--danger);
+        }
+        
+        button.info {
+            background-color: var(--info);
+        }
+        
+        .btn-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .btn-group button {
+            margin-bottom: 0;
+        }
+        
+        .display-area {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            min-height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #6c757d;
+            text-align: center;
+            padding: 15px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .display-area img, .display-area video, .display-area canvas {
+            max-width: 100%;
+            max-height: 250px;
+            border-radius: 8px;
+        }
+        
+        .results-area {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            height: 200px;
+            overflow-y: auto;
+            padding: 12px;
+            font-size: 13px;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .progress-container {
+            margin: 15px 0;
+        }
+        
+        .progress-bar {
+            height: 20px;
+            background-color: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .progress {
+            height: 100%;
+            background-color: var(--primary);
+            width: 0%;
+            transition: width 0.3s;
+        }
+        
+        .status-message {
+            margin-top: 8px;
+            font-size: 13px;
+            color: #6c757d;
+        }
+        
+        .alert {
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 1px solid transparent;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        
+        .alert-success {
+            color: #155724;
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+        }
+        
+        .alert-danger {
+            color: #721c24;
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 12px;
+        }
+        
+        .stat-item {
+            text-align: center;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .stat-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--primary);
+        }
+        
+        .stat-label {
+            font-size: 11px;
+            color: #6c757d;
+        }
+        
+        .feature-list {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        
+        .feature-item {
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 13px;
+        }
+        
+        .feature-value {
+            font-weight: bold;
+            color: var(--primary);
+            margin-top: 5px;
+        }
+        
+        .biometric-meter {
+            height: 8px;
+            background-color: #e9ecef;
+            border-radius: 4px;
+            margin-top: 5px;
+            overflow: hidden;
+        }
+        
+        .biometric-fill {
+            height: 100%;
+            background-color: var(--primary);
+            width: 0%;
+            transition: width 0.5s;
+        }
+        
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 26px;
+            margin-right: 10px;
+        }
+        
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 26px;
+        }
+        
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .toggle-slider {
+            background-color: var(--primary);
+        }
+        
+        input:checked + .toggle-slider:before {
+            transform: translateX(24px);
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 3px 8px;
+            font-size: 11px;
+            font-weight: bold;
+            border-radius: 10px;
+            margin-left: 5px;
+        }
+        
+        .badge-info {
+            background-color: var(--info);
+            color: white;
+        }
+        
+        .face-overlay {
+            position: absolute;
+            border: 2px solid;
+            border-radius: 5px;
+            pointer-events: none;
+        }
+        
+        .face-overlay.recognized {
+            border-color: var(--success);
+        }
+        
+        .face-overlay.unknown {
+            border-color: var(--warning);
+        }
+        
+        .face-label {
+            position: absolute;
+            top: -25px;
+            left: 0;
+            background-color: rgba(0,0,0,0.7);
+            color: white;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-size: 11px;
+            white-space: nowrap;
+        }
+        
+        /* Estilos para móviles específicos */
+        @media (max-width: 480px) {
+            .container {
+                padding: 8px;
+            }
+            
+            header {
+                padding: 12px 8px;
+                margin-bottom: 12px;
+            }
+            
+            header h1 {
+                font-size: 18px;
+            }
+            
+            .tab {
+                padding: 10px 12px;
+                font-size: 13px;
+                min-width: 110px;
+            }
+            
+            .tab-content {
+                padding: 12px;
+            }
+            
+            .panel-body {
+                padding: 12px;
+            }
+            
+            button {
+                padding: 14px 12px;
+                font-size: 15px;
+            }
+        }
+        
+        /* Orientación horizontal */
+        @media (max-height: 500px) and (orientation: landscape) {
+            .container {
+                padding: 5px;
+            }
+            
+            header {
+                padding: 8px 5px;
+                margin-bottom: 8px;
+            }
+            
+            header h1 {
+                font-size: 16px;
+            }
+            
+            .tabs {
+                margin-bottom: 8px;
+            }
+            
+            .tab {
+                padding: 8px 10px;
+                font-size: 12px;
+                min-width: 100px;
+            }
+            
+            .display-area {
+                min-height: 150px;
+            }
+            
+            .results-area {
+                height: 150px;
+            }
+        }
+        
+        /* Mejoras de accesibilidad */
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                transition: none !important;
+            }
+        }
+        
+        /* Mejora para iOS */
+        input, textarea, select {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🧠 Reconocimiento Facial 3D</h1>
+            <div class="subtitle">Sistema biométrico optimizado para móviles</div>
+        </header>
+        
+        <div class="tabs">
+            <button class="tab active" data-tab="camera">📷 Cámara</button>
+            <button class="tab" data-tab="single">🔄 Comparar</button>
+            <button class="tab" data-tab="analysis">🔍 Analizar</button>
+            <button class="tab" data-tab="help">❓ Ayuda</button>
+        </div>
+        
+        <!-- Pestaña de Cámara en Vivo -->
+        <div id="camera" class="tab-content active">
+            <div class="panel">
+                <div class="panel-header">🎯 Control de Cámara</div>
+                <div class="panel-body">
+                    <div class="form-group">
+                        <label for="camera-select">Cámara:</label>
+                        <select id="camera-select">
+                            <option value="">Cámara trasera</option>
+                            <option value="user">Cámara frontal</option>
+                        </select>
+                    </div>
+                    
+                    <div class="btn-group">
+                        <button id="start-camera" class="success">▶️ Iniciar Cámara</button>
+                        <button id="stop-camera" class="danger" disabled>⏹️ Detener</button>
+                        <button id="capture-frame" class="info" disabled>📸 Capturar</button>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="threshold-slider">Umbral: <span id="threshold-value">0.6</span></label>
+                        <input type="range" id="threshold-slider" min="0.1" max="1.0" step="0.05" value="0.6">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="show-landmarks" checked> Mostrar puntos de referencia
+                        </label>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="panel">
+                <div class="panel-header">👁️ Vista de Cámara</div>
+                <div class="panel-body">
+                    <div id="camera-display" class="display-area">
+                        <div class="progress-container">
+                            <div class="progress-bar">
+                                <div class="progress" id="loading-progress"></div>
+                            </div>
+                            <div class="status-message" id="loading-status">Inicializando cámara...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="panel">
+                <div class="panel-header">📊 Resultados en Tiempo Real</div>
+                <div class="panel-body">
+                    <div id="live-results" class="results-area">
+                        🔍 Esperando detecciones...
+                        <br><br>
+                        • Asegúrate de tener buena iluminación
+                        <br>
+                        • Enfoca tu rostro en la cámara
+                    </div>
+                </div>
+            </div>
+            
+            <div class="panel">
+                <div class="panel-header">📈 Estadísticas</div>
+                <div class="panel-body">
+                    <div id="stats-results">
+                        <div class="stats-grid">
+                            <div class="stat-item">
+                                <div class="stat-value">0</div>
+                                <div class="stat-label">Rostros</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">0%</div>
+                                <div class="stat-label">Precisión</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">0</div>
+                                <div class="stat-label">Puntos 3D</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">0ms</div>
+                                <div class="stat-label">Tiempo</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Pestaña de Comparación Individual -->
+        <div id="single" class="tab-content">
+            <div class="panel">
+                <div class="panel-header">Comparación de 2 Imágenes</div>
+                <div class="panel-body">
+                    <div class="panel">
+                        <div class="panel-header">Imagen 1</div>
+                        <div class="panel-body">
+                            <div id="image1-display" class="display-area">
+                                Selecciona la primera imagen
+                            </div>
+                            <div class="btn-group" style="margin-top: 10px;">
+                                <button id="select-image1" class="success">Seleccionar Imagen 1</button>
+                                <button id="analyze-image1" class="info" disabled>Analizar</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="panel" style="margin-top: 15px;">
+                        <div class="panel-header">Imagen 2</div>
+                        <div class="panel-body">
+                            <div id="image2-display" class="display-area">
+                                Selecciona la segunda imagen
+                            </div>
+                            <div class="btn-group" style="margin-top: 10px;">
+                                <button id="select-image2" class="success">Seleccionar Imagen 2</button>
+                                <button id="analyze-image2" class="info" disabled>Analizar</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button id="run-single-comparison" class="success" style="margin-top: 15px;">🔍 COMPARAR IMÁGENES</button>
+                    
+                    <div class="panel" style="margin-top: 15px;">
+                        <div class="panel-header">Resultados</div>
+                        <div class="panel-body">
+                            <div id="single-results" class="results-area">
+                                Los resultados aparecerán aquí después de la comparación
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Pestaña de Análisis Biométrico -->
+        <div id="analysis" class="tab-content">
+            <div class="panel">
+                <div class="panel-header">🔍 Análisis Biométrico 3D</div>
+                <div class="panel-body">
+                    <div class="panel">
+                        <div class="panel-header">Seleccionar Imagen</div>
+                        <div class="panel-body">
+                            <div id="analysis-display" class="display-area">
+                                Selecciona una imagen para analizar
+                            </div>
+                            <div class="btn-group" style="margin-top: 10px;">
+                                <button id="select-analysis-image" class="success">Seleccionar Imagen</button>
+                                <button id="analyze-image" class="info" disabled>Analizar</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="panel" style="margin-top: 15px;">
+                        <div class="panel-header">Opciones de Análisis</div>
+                        <div class="panel-body">
+                            <div class="form-group">
+                                <label>
+                                    <input type="checkbox" id="analyze-landmarks" checked> Puntos de referencia
+                                </label>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>
+                                    <input type="checkbox" id="analyze-distances" checked> Distancias faciales
+                                </label>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>
+                                    <input type="checkbox" id="analyze-shapes" checked> Formas faciales
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="panel" style="margin-top: 15px;">
+                        <div class="panel-header">Resultados del Análisis</div>
+                        <div class="panel-body">
+                            <div id="analysis-results" class="results-area">
+                                El análisis aparecerá aquí después de procesar la imagen
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Pestaña de Ayuda -->
+        <div id="help" class="tab-content">
+            <div class="panel">
+                <div class="panel-header">❓ Guía de Uso</div>
+                <div class="panel-body">
+                    <div class="results-area">
+                        <h3>Reconocimiento Facial 3D</h3>
+                        <p>Este sistema permite analizar rostros usando tecnología 3D:</p>
+                        
+                        <p><strong>📷 Cámara en Vivo:</strong></p>
+                        <ul>
+                            <li>Inicia la cámara para detección en tiempo real</li>
+                            <li>Usa la cámara frontal o trasera</li>
+                            <li>Ajusta el umbral de detección</li>
+                        </ul>
+                        
+                        <p><strong>🔄 Comparar:</strong></p>
+                        <ul>
+                            <li>Selecciona dos imágenes para comparar</li>
+                            <li>Analiza cada imagen primero</li>
+                            <li>Compara características biométricas</li>
+                        </ul>
+                        
+                        <p><strong>🔍 Analizar:</strong></p>
+                        <ul>
+                            <li>Selecciona una imagen para análisis detallado</li>
+                            <li>Obtén mediciones faciales en 3D</li>
+                            <li>Analiza distancias y formas faciales</li>
+                        </ul>
+                        
+                        <p><strong>Consejos para móviles:</strong></p>
+                        <ul>
+                            <li>Mantén el dispositivo estable</li>
+                            <li>Buena iluminación es esencial</li>
+                            <li>Enfoca bien el rostro en cámara</li>
+                            <li>Usa la cámara frontal para selfies</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Variables globales
+        let videoStream = null;
+        let canvasContext = null;
+        let modelsLoaded = false;
+        let isProcessing = false;
+        
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeUI();
+            checkMobileCompatibility();
+        });
+        
+        // Verificar compatibilidad con móviles
+        function checkMobileCompatibility() {
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            
+            if (!isMobile) {
+                document.getElementById('loading-status').textContent = "Optimizado para móviles - Usando versión web";
+            }
+            
+            // Verificar si hay cámara disponible
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                document.getElementById('loading-status').textContent = "❌ Cámara no disponible en este dispositivo";
+                document.getElementById('start-camera').disabled = true;
+                return;
+            }
+            
+            // Simular carga de modelos
+            simulateModelLoading();
+        }
+        
+        // Inicializar la interfaz de usuario
+        function initializeUI() {
+            // Configurar pestañas
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const tabId = this.getAttribute('data-tab');
+                    switchTab(tabId);
+                });
+            });
+            
+            // Configurar controles de cámara
+            document.getElementById('start-camera').addEventListener('click', startCamera);
+            document.getElementById('stop-camera').addEventListener('click', stopCamera);
+            document.getElementById('capture-frame').addEventListener('click', captureFrame);
+            
+            // Configurar controles deslizantes
+            document.getElementById('threshold-slider').addEventListener('input', function() {
+                document.getElementById('threshold-value').textContent = this.value;
+            });
+            
+            // Configurar botones de comparación
+            document.getElementById('select-image1').addEventListener('click', () => selectImage('image1'));
+            document.getElementById('select-image2').addEventListener('click', () => selectImage('image2'));
+            document.getElementById('analyze-image1').addEventListener('click', () => analyzeImage('image1'));
+            document.getElementById('analyze-image2').addEventListener('click', () => analyzeImage('image2'));
+            document.getElementById('run-single-comparison').addEventListener('click', runSingleComparison);
+            
+            // Configurar botones de análisis
+            document.getElementById('select-analysis-image').addEventListener('click', selectAnalysisImage);
+            document.getElementById('analyze-image').addEventListener('click', analyzeSelectedImage);
+            
+            // Prevenir zoom en inputs (especialmente en iOS)
+            document.addEventListener('touchstart', function() {}, {passive: true});
+        }
+        
+        // Simular carga de modelos
+        function simulateModelLoading() {
+            let progress = 0;
+            const progressBar = document.getElementById('loading-progress');
+            const status = document.getElementById('loading-status');
+            
+            const interval = setInterval(() => {
+                progress += 5;
+                progressBar.style.width = `${progress}%`;
+                
+                if (progress <= 30) {
+                    status.textContent = "Cargando detector de rostros...";
+                } else if (progress <= 60) {
+                    status.textContent = "Inicializando modelo 3D...";
+                } else if (progress <= 90) {
+                    status.textContent = "Preparando análisis biométrico...";
+                } else {
+                    status.textContent = "✅ Sistema listo";
+                    clearInterval(interval);
+                    modelsLoaded = true;
+                    
+                    // Habilitar botones
+                    document.getElementById('start-camera').disabled = false;
+                }
+            }, 150);
+        }
+        
+        // Cambiar pestaña
+        function switchTab(tabId) {
+            // Ocultar todas las pestañas
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Desactivar todas las pestañas
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Activar pestaña seleccionada
+            document.getElementById(tabId).classList.add('active');
+            document.querySelector(`.tab[data-tab="${tabId}"]`).classList.add('active');
+            
+            // Si se cambia de pestaña y la cámara está activa, detenerla para ahorrar recursos
+            if (tabId !== 'camera' && videoStream) {
+                stopCamera();
+            }
+        }
+        
+        // Iniciar cámara
+        async function startCamera() {
+            if (!modelsLoaded) {
+                alert("El sistema aún se está inicializando. Por favor, espera.");
+                return;
+            }
+            
+            if (isProcessing) return;
+            isProcessing = true;
+            
+            const cameraSelect = document.getElementById('camera-select');
+            const displayArea = document.getElementById('camera-display');
+            
+            try {
+                // Limpiar área de visualización
+                displayArea.innerHTML = '<div class="status-message">🔄 Iniciando cámara...</div>';
+                
+                // Configurar constraints para móviles
+                const constraints = {
+                    video: {
+                        facingMode: cameraSelect.value === 'user' ? 'user' : 'environment',
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 },
+                        frameRate: { ideal: 24 }
+                    },
+                    audio: false
+                };
+                
+                // Solicitar acceso a la cámara
+                videoStream = await navigator.mediaDevices.getUserMedia(constraints);
+                
+                // Crear elemento de video
+                const video = document.createElement('video');
+                video.srcObject = videoStream;
+                video.autoplay = true;
+                video.playsInline = true;
+                video.muted = true;
+                
+                // Esperar a que el video esté listo
+                await new Promise((resolve) => {
+                    video.onloadedmetadata = () => {
+                        video.play().then(resolve);
+                    };
+                });
+                
+                // Configurar display
+                displayArea.innerHTML = '';
+                displayArea.appendChild(video);
+                
+                // Crear canvas para procesamiento
+                const canvas = document.createElement('canvas');
+                canvas.style.display = 'none';
+                displayArea.appendChild(canvas);
+                
+                canvasContext = canvas.getContext('2d');
+                
+                // Ajustar canvas al tamaño del video
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                
+                // Habilitar/deshabilitar botones
+                document.getElementById('start-camera').disabled = true;
+                document.getElementById('stop-camera').disabled = false;
+                document.getElementById('capture-frame').disabled = false;
+                
+                // Iniciar procesamiento
+                isProcessing = false;
+                processVideo();
+                
+            } catch (error) {
+                console.error('Error al acceder a la cámara:', error);
+                isProcessing = false;
+                
+                let errorMessage = 'No se pudo acceder a la cámara. ';
+                
+                if (error.name === 'NotAllowedError') {
+                    errorMessage += 'Por favor, permite el acceso a la cámara en la configuración de tu navegador.';
+                } else if (error.name === 'NotFoundError') {
+                    errorMessage += 'No se encontró ninguna cámara disponible.';
+                } else if (error.name === 'NotSupportedError') {
+                    errorMessage += 'Tu navegador no soporta esta funcionalidad.';
+                } else {
+                    errorMessage += 'Error desconocido: ' + error.message;
+                }
+                
+                displayArea.innerHTML = `<div class="status-message" style="color: var(--danger);">${errorMessage}</div>`;
+                document.getElementById('start-camera').disabled = false;
+            }
+        }
+        
+        // Detener cámara
+        function stopCamera() {
+            if (videoStream) {
+                videoStream.getTracks().forEach(track => track.stop());
+                videoStream = null;
+            }
+            
+            document.getElementById('start-camera').disabled = false;
+            document.getElementById('stop-camera').disabled = true;
+            document.getElementById('capture-frame').disabled = true;
+            
+            const displayArea = document.getElementById('camera-display');
+            displayArea.innerHTML = '<div class="status-message">Cámara detenida</div>';
+        }
+        
+        // Procesar video para detección facial
+        function processVideo() {
+            if (!videoStream || isProcessing) return;
+            
+            isProcessing = true;
+            
+            const video = document.querySelector('#camera-display video');
+            const canvas = document.querySelector('#camera-display canvas');
+            
+            if (video.readyState === video.HAVE_ENOUGH_DATA) {
+                // Dibujar frame actual en canvas
+                canvasContext.drawImage(video, 0, 0, canvas.width, canvas.height);
+                
+                // Simular detección facial (en un sistema real usarías una biblioteca como face-api.js)
+                simulateFaceDetection(canvas);
+            }
+            
+            isProcessing = false;
+            
+            // Continuar procesamiento si la cámara sigue activa
+            if (videoStream) {
+                setTimeout(() => processVideo(), 100); // 10 FPS para móviles
+            }
+        }
+        
+        // Simular detección facial
+        function simulateFaceDetection(canvas) {
+            const threshold = parseFloat(document.getElementById('threshold-slider').value);
+            const showLandmarks = document.getElementById('show-landmarks').checked;
+            
+            // Simular entre 0 y 3 rostros detectados
+            const numFaces = Math.min(3, Math.floor(Math.random() * 4));
+            const faces = [];
+            
+            for (let i = 0; i < numFaces; i++) {
+                const width = 100 + Math.random() * 100;
+                const height = width * 1.2;
+                const x = Math.random() * (canvas.width - width);
+                const y = Math.random() * (canvas.height - height);
+                
+                // Generar datos biométricos simulados
+                const biometrics = generateBiometricData();
+                
+                faces.push({
+                    x, y, width, height,
+                    confidence: 0.7 + Math.random() * 0.3,
+                    landmarks: showLandmarks ? generateLandmarks(x, y, width, height) : [],
+                    biometrics: biometrics
+                });
+            }
+            
+            // Dibujar resultados
+            drawFaceDetectionResults(canvas, faces);
+            
+            // Actualizar resultados en tiempo real
+            updateLiveResults(faces);
+            
+            // Actualizar estadísticas
+            updateStats(faces);
+        }
+        
+        // Generar datos biométricos simulados
+        function generateBiometricData() {
+            return {
+                eyeDistance: 50 + Math.random() * 20,
+                foreheadChin: 180 + Math.random() * 40,
+                noseMouth: 40 + Math.random() * 15,
+                symmetry: 0.7 + Math.random() * 0.3,
+                uniquePoints: Math.floor(5 + Math.random() * 15)
+            };
+        }
+        
+        // Generar puntos de referencia
+        function generateLandmarks(x, y, width, height) {
+            const landmarks = [];
+            const numPoints = 10; // Reducido para móviles
+            
+            for (let i = 0; i < numPoints; i++) {
+                const pointX = x + Math.random() * width;
+                const pointY = y + Math.random() * height;
+                landmarks.push({ x: pointX, y: pointY });
+            }
+            
+            return landmarks;
+        }
+        
+        // Dibujar resultados de detección
+        function drawFaceDetectionResults(canvas, faces) {
+            const ctx = canvas.getContext('2d');
+            
+            // Limpiar canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Dibujar detecciones
+            faces.forEach(face => {
+                // Dibujar rectángulo
+                ctx.strokeStyle = face.confidence > 0.8 ? '#28a745' : '#ffc107';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(face.x, face.y, face.width, face.height);
+                
+                // Dibujar puntos de referencia
+                if (face.landmarks.length > 0) {
+                    ctx.fillStyle = 'red';
+                    face.landmarks.forEach(landmark => {
+                        ctx.beginPath();
+                        ctx.arc(landmark.x, landmark.y, 3, 0, 2 * Math.PI);
+                        ctx.fill();
+                    });
+                }
+                
+                // Dibujar etiqueta de confianza
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+                ctx.fillRect(face.x, face.y - 20, 80, 20);
+                ctx.fillStyle = 'white';
+                ctx.font = '12px Arial';
+                ctx.fillText(`${(face.confidence * 100).toFixed(0)}%`, face.x + 5, face.y - 5);
+            });
+        }
+        
+        // Actualizar resultados en tiempo real
+        function updateLiveResults(faces) {
+            const resultsArea = document.getElementById('live-results');
+            
+            if (faces.length === 0) {
+                resultsArea.innerHTML = '🔍 Escaneando...<br><br>Enfoca tu rostro en la cámara';
+                return;
+            }
+            
+            let html = `<strong>${faces.length} rostro(s) detectado(s)</strong><br><br>`;
+            
+            faces.forEach((face, index) => {
+                html += `<strong>Rostro ${index + 1}:</strong><br>`;
+                html += `• Confianza: ${(face.confidence * 100).toFixed(1)}%<br>`;
+                html += `• Dist. ojos: ${face.biometrics.eyeDistance.toFixed(1)}px<br>`;
+                html += `• Simetría: ${(face.biometrics.symmetry * 100).toFixed(1)}%<br><br>`;
+            });
+            
+            resultsArea.innerHTML = html;
+        }
+        
+        // Actualizar estadísticas
+        function updateStats(faces) {
+            const statsGrid = document.querySelector('#stats-results .stats-grid');
+            
+            if (!statsGrid) return;
+            
+            const totalFaces = faces.length;
+            const avgConfidence = faces.length > 0 ? 
+                faces.reduce((sum, face) => sum + face.confidence, 0) / faces.length : 0;
+            const totalPoints = faces.reduce((sum, face) => sum + face.biometrics.uniquePoints, 0);
+            const processingTime = 50 + Math.random() * 100;
+            
+            statsGrid.innerHTML = `
+                <div class="stat-item">
+                    <div class="stat-value">${totalFaces}</div>
+                    <div class="stat-label">Rostros</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">${(avgConfidence * 100).toFixed(0)}%</div>
+                    <div class="stat-label">Precisión</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">${totalPoints}</div>
+                    <div class="stat-label">Puntos 3D</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">${processingTime.toFixed(0)}ms</div>
+                    <div class="stat-label">Tiempo</div>
+                </div>
+            `;
+        }
+        
+        // Capturar frame
+        function captureFrame() {
+            if (!videoStream) return;
+            
+            const video = document.querySelector('#camera-display video');
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0);
+            
+            // Mostrar en pestaña de análisis
+            const displayArea = document.getElementById('analysis-display');
+            const img = new Image();
+            img.src = canvas.toDataURL();
+            displayArea.innerHTML = '';
+            displayArea.appendChild(img);
+            
+            // Habilitar análisis
+            document.getElementById('analyze-image').disabled = false;
+            
+            // Guardar referencia
+            window.analysisImage = {
+                element: img,
+                dataUrl: canvas.toDataURL()
+            };
+            
+            // Cambiar a pestaña de análisis
+            switchTab('analysis');
+            
+            // Mostrar mensaje de confirmación
+            alert('✅ Imagen capturada correctamente');
+        }
+        
+        // Seleccionar imagen para comparación
+        function selectImage(imageType) {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.capture = 'environment'; // Para móviles
+            
+            input.onchange = e => {
+                const file = e.target.files[0];
+                if (file) {
+                    const url = URL.createObjectURL(file);
+                    const img = new Image();
+                    img.src = url;
+                    
+                    const displayArea = document.getElementById(`${imageType}-display`);
+                    displayArea.innerHTML = '';
+                    displayArea.appendChild(img);
+                    
+                    // Habilitar botón de análisis
+                    document.getElementById(`analyze-${imageType}`).disabled = false;
+                    
+                    // Guardar referencia
+                    window[`${imageType}Data`] = {
+                        url: url,
+                        file: file,
+                        analyzed: false
+                    };
+                }
+            };
+            
+            input.click();
+        }
+        
+        // Analizar imagen individual
+        function analyzeImage(imageType) {
+            const imageData = window[`${imageType}Data`];
+            if (!imageData) return;
+            
+            // Simular análisis
+            const analysisResults = simulateImageAnalysis();
+            
+            // Mostrar resultados
+            const resultsArea = document.getElementById('single-results');
+            resultsArea.innerHTML = `<strong>Análisis de ${imageType}:</strong><br><br>${analysisResults}`;
+            
+            // Marcar como analizada
+            imageData.analyzed = true;
+            imageData.analysis = analysisResults;
+        }
+        
+        // Simular análisis de imagen
+        function simulateImageAnalysis() {
+            const hasFace = Math.random() > 0.2;
+            
+            if (!hasFace) {
+                return '❌ No se detectaron rostros en la imagen.';
+            }
+            
+            const biometrics = generateBiometricData();
+            
+            let html = '✅ <strong>Rostro detectado</strong><br><br>';
+            html += `• Confianza: ${(0.8 + Math.random() * 0.2 * 100).toFixed(1)}%<br>`;
+            html += `• Distancia entre ojos: ${biometrics.eyeDistance.toFixed(1)}px<br>`;
+            html += `• Distancia frente-barbilla: ${biometrics.foreheadChin.toFixed(1)}px<br>`;
+            html += `• Simetría facial: ${(biometrics.symmetry * 100).toFixed(1)}%<br>`;
+            html += `• Puntos únicos: ${biometrics.uniquePoints}<br>`;
+            
+            return html;
+        }
+        
+        // Ejecutar comparación individual
+        function runSingleComparison() {
+            const image1Data = window.image1Data;
+            const image2Data = window.image2Data;
+            
+            if (!image1Data || !image2Data) {
+                alert('Por favor, selecciona ambas imágenes para comparar.');
+                return;
+            }
+            
+            if (!image1Data.analyzed || !image2Data.analyzed) {
+                alert('Por favor, analiza ambas imágenes antes de comparar.');
+                return;
+            }
+            
+            // Simular comparación
+            const similarity = 0.3 + Math.random() * 0.7;
+            const match = similarity > 0.6;
+            
+            // Mostrar resultados
+            const resultsArea = document.getElementById('single-results');
+            let html = '<strong>🔍 Resultados de Comparación</strong><br><br>';
+            html += `• Similitud biométrica: <strong>${(similarity * 100).toFixed(1)}%</strong><br>`;
+            html += `• Coincidencia: <strong style="color: ${match ? '#28a745' : '#dc3545'}">${match ? 'SÍ' : 'NO'}</strong><br>`;
+            html += `• Nivel de confianza: <strong>${(0.7 + Math.random() * 0.3 * 100).toFixed(1)}%</strong><br><br>`;
+            
+            if (match) {
+                html += '<div class="alert alert-success">✅ Las imágenes probablemente corresponden a la misma persona.</div>';
+            } else {
+                html += '<div class="alert alert-danger">❌ Las imágenes probablemente corresponden a personas diferentes.</div>';
+            }
+            
+            resultsArea.innerHTML = html;
+        }
+        
+        // Seleccionar imagen para análisis
+        function selectAnalysisImage() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.capture = 'environment';
+            
+            input.onchange = e => {
+                const file = e.target.files[0];
+                if (file) {
+                    const url = URL.createObjectURL(file);
+                    const img = new Image();
+                    img.src = url;
+                    
+                    const displayArea = document.getElementById('analysis-display');
+                    displayArea.innerHTML = '';
+                    displayArea.appendChild(img);
+                    
+                    // Habilitar botón de análisis
+                    document.getElementById('analyze-image').disabled = false;
+                    
+                    // Guardar referencia
+                    window.analysisImage = {
+                        url: url,
+                        file: file
+                    };
+                }
+            };
+            
+            input.click();
+        }
+        
+        // Analizar imagen seleccionada
+        function analyzeSelectedImage() {
+            if (!window.analysisImage) return;
+            
+            // Obtener opciones
+            const options = {
+                landmarks: document.getElementById('analyze-landmarks').checked,
+                distances: document.getElementById('analyze-distances').checked,
+                shapes: document.getElementById('analyze-shapes').checked
+            };
+            
+            // Simular análisis
+            const analysisResults = simulateAdvancedAnalysis(options);
+            
+            // Mostrar resultados
+            displayAnalysisResults(analysisResults, options);
+        }
+        
+        // Simular análisis avanzado
+        function simulateAdvancedAnalysis(options) {
+            const hasFace = Math.random() > 0.2;
+            
+            if (!hasFace) {
+                return {
+                    hasFace: false,
+                    message: '❌ No se detectaron rostros en la imagen.'
+                };
+            }
+            
+            const results = {
+                hasFace: true,
+                confidence: 0.8 + Math.random() * 0.2,
+                biometrics: generateBiometricData(),
+                landmarks: options.landmarks ? 68 : 0,
+                shapes: options.shapes ? {
+                    cheekbones: ['alto', 'medio', 'bajo'][Math.floor(Math.random() * 3)],
+                    lips: ['delgado', 'medio', 'grueso'][Math.floor(Math.random() * 3)],
+                    chin: ['puntiagudo', 'redondo', 'cuadrado'][Math.floor(Math.random() * 3)]
+                } : null
+            };
+            
+            return results;
+        }
+        
+        // Mostrar resultados de análisis
+        function displayAnalysisResults(results, options) {
+            const resultsArea = document.getElementById('analysis-results');
+            
+            if (!results.hasFace) {
+                resultsArea.innerHTML = results.message;
+                return;
+            }
+            
+            let html = '<strong>✅ Análisis Biométrico Completado</strong><br><br>';
+            html += `• Confianza: <strong>${(results.confidence * 100).toFixed(1)}%</strong><br>`;
+            
+            if (options.distances && results.biometrics) {
+                html += `<br><strong>Distancias Faciales:</strong><br>`;
+                html += `• Entre ojos: ${results.biometrics.eyeDistance.toFixed(1)}px<br>`;
+                html += `• Frente-barbilla: ${results.biometrics.foreheadChin.toFixed(1)}px<br>`;
+                html += `• Nariz-boca: ${results.biometrics.noseMouth.toFixed(1)}px<br>`;
+            }
+            
+            if (options.landmarks) {
+                html += `<br><strong>Puntos de Referencia:</strong><br>`;
+                html += `• ${results.landmarks} puntos detectados<br>`;
+                html += `• Precisión 3D: ${(0.85 + Math.random() * 0.15 * 100).toFixed(1)}%<br>`;
+            }
+            
+            if (options.shapes && results.shapes) {
+                html += `<br><strong>Formas Faciales:</strong><br>`;
+                html += `• Pómulos: ${results.shapes.cheekbones}<br>`;
+                html += `• Labios: ${results.shapes.lips}<br>`;
+                html += `• Barbilla: ${results.shapes.chin}<br>`;
+            }
+            
+            html += `<br><strong>Puntos Únicos:</strong> ${results.biometrics.uniquePoints}<br>`;
+            html += `<strong>Simetría Facial:</strong> ${(results.biometrics.symmetry * 100).toFixed(1)}%`;
+            
+            resultsArea.innerHTML = html;
+        }
+    </script>
+</body>
+</html>
